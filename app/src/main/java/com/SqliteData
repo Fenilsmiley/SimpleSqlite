@@ -1,0 +1,103 @@
+package com.example.admin.sqlitedemo;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
+
+/**
+ * Created by Admin on 18-11-2017.
+ */
+
+public class SqliteData extends SQLiteOpenHelper {
+
+    private static final String DB_NAME = "user_database";
+    private static final String TB_NAME = "user_table";
+    private static final String COL_ID = "id";
+    private static final String COL_NAME = "name";
+    private static final String COL_CITY = "city";
+    private static final int VERSION = 1;
+    private SQLiteDatabase db;
+
+
+    public SqliteData(Context context) {
+        super(context, DB_NAME, null, VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+
+        String create_sql = "CREATE TABLE "+TB_NAME+"("+COL_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "
+                +COL_NAME+" TEXT, "
+                +COL_CITY+" TEXT)";
+
+        sqLiteDatabase.execSQL(create_sql);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+
+        String drop_sql = "DROP TABLE IF EXISTS "+TB_NAME;
+        sqLiteDatabase.execSQL(drop_sql);
+
+        onCreate(sqLiteDatabase);
+    }
+    public void onInsert(User user) {
+
+        db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_NAME,user.getName());
+        values.put(COL_CITY,user.getCity());
+
+        db.insert(TB_NAME,null,values);
+        Log.d("SQLIte",COL_NAME +" "+COL_CITY );
+        Log.d("SQLIte",user.getName() +" "+user.getCity());
+    }
+    ArrayList<User> onDisplay()
+    {
+
+        db = getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT * FROM "+TB_NAME,null);
+
+        ArrayList<User> list = new ArrayList<>();
+        while (c!=null && c.moveToNext())
+        {
+
+            User user = new User();
+            user.setId(c.getInt(0));
+            user.setName(c.getString(1));
+            user.setCity(c.getString(2));
+
+            Log.d("SQLIte",user.getName() );
+            list.add(user);
+        }
+
+
+        return list;
+    }
+    public int onDelete(User user)
+    {
+
+        db = getWritableDatabase();
+        int delete_sql = db.delete(TB_NAME,COL_ID +"= ?",new String[]{String.valueOf(user.getId())});
+
+        return delete_sql;
+    }
+    public int onUpdate(User user)
+    {
+
+        db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(COL_NAME,user.getName());
+        values.put(COL_CITY,user.getCity());
+
+        int update_sql = db.update(TB_NAME,values,COL_ID +" = ?",new String[]{String.valueOf(user.getId())});
+
+        return update_sql;
+    }
+}
